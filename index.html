@@ -1,171 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCR for Prescription Numbers (Mobile Friendly)</title>
+<meta charset="UTF-8" />
+<title>Duochrome Trainer — Over-Rx = Target − Participant (J0/J45, ΔM) + Cyl Toggle + Reset + Target Limits</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f7f7f7;
-  padding: 40px;
-  color: #333;
-}
-.container {
-  max-width: 720px;
-  margin: auto;
-  background: white;
-  padding: 25px 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-canvas {
-  max-width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  touch-action: none;
-}
-button {
-  background: #009879;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin: 8px 6px 0 0;
-}
-button:hover { background: #007a63; }
-#progress {
-  margin-top: 10px;
-  width: 100%;
-  height: 6px;
-  background: #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-#bar {
-  width: 0%;
-  height: 100%;
-  background: #009879;
-}
-pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background: #fafafa;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  margin-top: 15px;
-}
+  body { font-family: system-ui, sans-serif; background:#fff; text-align:center; margin:20px; }
+  #currentRx { font-weight:700; margin-bottom:10px; }
+
+  .card{
+    background:#fff; border-radius:10px; padding:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.08); display:inline-block;
+    margin:8px 0 14px;
+  }
+  .row input[type=number]{ width:70px; text-align:center; }
+  .row b{ display:inline-block; margin-bottom:6px; }
+  button{ margin:5px; padding:5px 10px; cursor:pointer; }
+
+  /* Duochrome stage */
+  .duochrome{
+    display:flex; justify-content:center; align-items:center;
+    width:300px; height:300px; margin:20px auto; position:relative;
+    overflow:hidden;
+  }
+  .duo-side{
+    position:relative; width:150px; height:300px;
+    display:flex; align-items:center; justify-content:center;
+    overflow: clip; contain: paint; isolation: isolate;
+  }
+  @supports not (overflow: clip) { .duo-side { overflow: hidden; } }
+
+  /* Trim 10px edges */
+  #redSide  { clip-path: inset(0 0 0 10px); }
+  #blueSide { clip-path: inset(0 10px 0 0); }
+
+  .duo-side img.base{
+    width:150px; height:300px; object-fit:cover; display:block;
+    transition:none; will-change: filter;
+  }
+  .duo-side img.overlay{
+    position:absolute; left:0; top:0;
+    width:150px; height:300px; object-fit:cover; pointer-events:none;
+    transition:none; will-change: transform, filter, opacity;
+    backface-visibility:hidden; transform: translate3d(0,0,0);
+  }
+
+  /* Fan chart */
+  .outer-circle{
+    width:250px; height:250px; border-radius:50%; border:none;
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    margin:40px auto; transform-origin:center;
+  }
+  .circular-img img{
+    width:300px; height:auto; object-fit:cover; object-position:center;
+    transform-origin:center;
+  }
+
+  /* Side-by-side layout for duochrome + fan chart */
+  #stage {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    justify-content: center;
+  }
+  .duochrome, .outer-circle {
+    margin: 12px 0;
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h2>Prescription OCR — Numeric Optimized</h2>
-  <input type="file" id="imageInput" accept="image/*"><br>
-  <canvas id="canvas"></canvas><br>
-  <button onclick="extractCropped()">Extract Cropped Text</button>
-  <div id="progress"><div id="bar"></div></div>
-  <pre id="result">No text extracted yet.</pre>
+
+<div id="currentRx">Simulation: </div>
+
+<!-- Participant Rx -->
+<div id="controls" class="card">
+  <div class="row">
+    <b>Find the RX!</b><br>
+    SPH <input type="number" id="sph" step="0.25" value="0.00">
+    CYL <input type="number" id="cyl" step="0.25" value="0.00">
+    AXIS <input type="number" id="axis" step="5" value="180">
+  </div>
+  <div style="height:10px"></div>
+  <div class="row">
+    <button id="sizeBtn">Letter Size: Medium</button>
+    <button id="formToggleBtn">To +cyl</button>
+  </div>
+  <div style="height:10px"></div>
+  <div class="row">
+    <button id="resetBtn">Reset Participant</button>
+    <button id="randBtn">New Target</button>
+    <button id="targetToggleBtn">Show Target</button>
+  </div>
+  <div style="height:10px"></div>
+  <div class="row">
+    <span>Clue! If numbers in red clearer, make sph more minus. If blue clearer, make sph more plus!<br>
+    Make sure astig is always balance, whether clear or blur!</span>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- Target Rx (hidden by default) -->
+<div id="targetPanel" class="card" style="display:none;">
+  <div class="row">
+    <b>Target Rx (hidden)</b><br>
+    SPH <input type="number" id="tSph" step="0.25" value="-1.00">
+    CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
+    AXIS <input type="number" id="tAxis" step="5" value="180">
+    <div style="margin-top:6px; font-size:12px; color:#666;">
+      Limits: SPH +4.00…−7.00 · CYL 0 to −4.00 (minus) · AXIS 1–180
+    </div>
+  </div>
+</div>
+<div style="height:40px"></div>
+
+
+
+<div id="stage">
+  <!-- STACKED CONTAINER -->
+  <!-- CHANGED: margin:0 0 20px 0 (no auto left/right inside flex) -->
+  <div id="stack" style="position:relative; width:400px; margin:0 0 20px 0;">
+    <img class="bg"
+         src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/FC_DIRECTIONS.png"
+         alt="Fan Chart Directions"
+         style="width:100%; display:block;" />
+
+    <!-- Overlay (fan chart) -->
+    <div class="overlay" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+      <!-- CHANGED: avoid duplicate id -->
+      <div class="overlay-stage">
+        <div class="outer-circle" id="outerCircle" style="width:100%; aspect-ratio:1/1; border-radius:9999px; overflow:hidden;">
+          <div class="circular-img" style="width:100%; height:100%;">
+            <img id="fanChart"
+                 src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/C025.png"
+                 alt="Fan Chart"
+                 style="width:100%; height:100%; object-fit:cover;" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Duochrome (RIGHT) -->
+  <div class="duochrome">
+    <div class="duo-side" id="redSide">
+      <img class="base" id="redImg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/RED_2.png" alt="Red">
+      <img class="overlay" id="redOv" alt="Red overlay">
+    </div>
+    <div class="duo-side" id="blueSide">
+      <img class="base" id="blueImg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/BLUE_2.png" alt="Blue">
+      <img class="overlay" id="blueOv" alt="Blue overlay">
+    </div>
+  </div>
+</div>
+
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let img = new Image(), startX, startY, endX, endY, drawing = false;
+/* ===== Tunables ===== */
+const PX_PER_D               = 2;
+const K_BLUR_PER_D           = 2.0;
+const EXTRA_ASTIG_BLUR_PER_D = 0.40;
+const OVERLAY_ALPHA          = 0.60;
+const AXIS_STEP              = 5;
+/* Target limits */
+const T_SPH_MIN = -7.00, T_SPH_MAX = +4.00;
+const T_CYL_MIN = -4.00, T_CYL_MAX =  0.00;
+/* ===================== */
 
-// === Load Image ===
-document.getElementById('imageInput').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  img.src = URL.createObjectURL(file);
-  img.onload = () => {
-    canvas.width = img.width > 700 ? 700 : img.width;
-    const scale = canvas.width / img.width;
-    canvas.height = img.height * scale;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  };
-});
+const redImg   = document.getElementById('redImg');
+const blueImg  = document.getElementById('blueImg');
+const redOv    = document.getElementById('redOv');
+const blueOv   = document.getElementById('blueOv');
+const fanImg   = document.getElementById('fanChart');
+const outer    = document.getElementById('outerCircle');
+const FC_BLUR_GAIN = 0.50;
 
-// === Crop Drawing (Mouse + Touch) ===
-function startDraw(x, y){ startX = x; startY = y; drawing = true; }
-function moveDraw(x, y){
-  if (!drawing) return;
-  endX = x; endY = y;
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(255,0,0,0.25)';
-  ctx.strokeStyle = 'red';
-  ctx.lineWidth = 2;
-  const w = endX - startX, h = endY - startY;
-  ctx.fillRect(startX, startY, w, h);
-  ctx.strokeRect(startX, startY, w, h);
-}
-function endDraw(){ drawing = false; }
+const sphInput  = document.getElementById('sph');
+const cylInput  = document.getElementById('cyl');
+const axisInput = document.getElementById('axis');
 
-canvas.addEventListener('mousedown', e => {
-  const r = canvas.getBoundingClientRect();
-  startDraw(e.clientX - r.left, e.clientY - r.top);
-});
-canvas.addEventListener('mousemove', e => {
-  const r = canvas.getBoundingClientRect();
-  moveDraw(e.clientX - r.left, e.clientY - r.top);
-});
-canvas.addEventListener('mouseup', endDraw);
+const randBtn          = document.getElementById('randBtn');
+const sizeBtn          = document.getElementById('sizeBtn');
+const targetToggleBtn  = document.getElementById('targetToggleBtn');
+const formToggleBtn    = document.getElementById('formToggleBtn');
+const resetBtn         = document.getElementById('resetBtn');
 
-canvas.addEventListener('touchstart', e => {
-  const r = canvas.getBoundingClientRect();
-  const t = e.touches[0];
-  startDraw(t.clientX - r.left, t.clientY - r.top);
-});
-canvas.addEventListener('touchmove', e => {
-  const r = canvas.getBoundingClientRect();
-  const t = e.touches[0];
-  moveDraw(t.clientX - r.left, t.clientY - r.top);
-});
-canvas.addEventListener('touchend', endDraw);
+const targetPanel = document.getElementById('targetPanel');
+const tSph = document.getElementById('tSph');
+const tCyl = document.getElementById('tCyl');
+const tAxis= document.getElementById('tAxis');
 
-// === OCR Extraction ===
-async function extractCropped() {
-  const resEl = document.getElementById('result');
-  if (endX == null || endY == null) {
-    alert('Draw a crop box first.');
-    return;
-  }
-  resEl.textContent = 'Reading text... please wait.';
+let letterSize = 2;
 
-  // Create cropped area
-  const w = Math.abs(endX - startX), h = Math.abs(endY - startY);
-  const x = Math.min(startX, endX), y = Math.min(startY, endY);
-  const crop = document.createElement('canvas');
-  crop.width = w; crop.height = h;
-  const cctx = crop.getContext('2d');
-  // Enhance image for numeric accuracy
-  cctx.filter = 'contrast(200%) brightness(120%) grayscale(100%) blur(0.8px)';
-  cctx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+/* Hidden states */
+let TARGET = { S: -1.00, C: -1.00, A: 180 };
+let TRUE   = { sph: 0, cyl: 0, axis: 180, se: 0 };
 
-  const { data: { text } } = await Tesseract.recognize(crop.toDataURL('image/png'), 'eng', {
-    langPath: 'https://tessdata.projectnaptha.com/4.0.0_best/',
-    tessedit_char_whitelist: '0123456789.-+',
-    tessedit_pageseg_mode: 6,
-    logger: info => {
-      if (info.status === 'recognizing text') {
-        document.getElementById('bar').style.width = Math.round(info.progress * 100) + '%';
-      }
-    }
+/* Assets (preload) */
+const SIZES = [1,2,3];
+const cache = {};
+(function preloadAll(){
+  SIZES.forEach(sz=>{
+    ["RED","BLUE"].forEach(col=>{
+      const url = `https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/${col}_${sz}.png`;
+      const im = new Image(); im.decoding = "async"; im.src = url;
+      cache[`${col}_${sz}`] = im;
+    });
   });
+})();
 
-  // Clean and correct output
-  let clean = text
-    .replace(/O/g, '0')
-    .replace(/l/g, '1')
-    .replace(/S/g, '5')
-    .replace(/[^0-9.+\-\n ]/g, '')
-    .trim();
-
-  resEl.textContent = clean || 'No text found.';
-  document.getElementById('bar').style.width = '0%';
+async function applyLetterImages(){
+  const rKey = `RED_${letterSize}`, bKey = `BLUE_${letterSize}`;
+  await Promise.all([
+    cache[rKey].decode?.().catch(()=>{}),
+    cache[bKey].decode?.().catch(()=>{}),
+  ]);
+  const rSrc = cache[rKey].src, bSrc = cache[bKey].src;
+  redImg.src = rSrc;  redOv.src = rSrc;
+  blueImg.src = bSrc; blueOv.src = bSrc;
 }
+
+/* Helpers */
+const quant05 = v => Math.round(v*2)/2;
+function wrapAxis(val){
+  const n = parseFloat(val);
+  if (!Number.isFinite(n)) return 0;
+  const raw = String(val).trim();
+  let v = ((Math.round(n) % 180) + 180) % 180; // 0..179
+  return raw === "180" ? 180 : (v === 0 ? 1 : v);
+}
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+/* Cyl form helpers */
+function normalizeMinus(S, C, A){
+  if (C > 0){
+    S = S + C; C = -C; A = (wrapAxis(A + 90)) || 180;
+  } else {
+    A = wrapAxis(A);
+  }
+  return { S, C, A };
+}
+
+/* Target clamping */
+function clampTarget(obj){
+  let S = clamp((+obj.S || 0), T_SPH_MIN, T_SPH_MAX);
+  let C = (+obj.C || 0);
+  if (C > 0) C = -C;
+  C = clamp(C, T_CYL_MIN, T_CYL_MAX);
+  let A = wrapAxis(+obj.A || 180);
+  return { S, C, A };
+}
+
+/* Power-vector helpers */
+function toVec(S, C, Adeg){
+  const rad2 = (2*Adeg) * Math.PI/180;
+  const M  = S + C/2;
+  const J0 = -(C/2) * Math.cos(rad2);
+  const J45= -(C/2) * Math.sin(rad2);
+  return {M,J0,J45};
+}
+function fromVec(M, J0, J45){
+  const C = -2 * Math.hypot(J0, J45);
+  let A = 0.5 * (Math.atan2(J45, J0) * 180/Math.PI);
+  A = ((A % 180) + 180) % 180 || 180;
+  const S = M - C/2;
+  return {S, C, A};
+}
+
+/* Participant Rx from inputs */
+function getParticipantMinus(){
+  const S = parseFloat(sphInput.value)||0;
+  const C = parseFloat(cylInput.value)||0;
+  const A = wrapAxis(axisInput.value||0);
+  return normalizeMinus(S, C, A);
+}
+
+/* Compute Over-Rx */
+function recomputeOver(){
+  const Pm = getParticipantMinus();
+  const Tm = normalizeMinus(...Object.values(clampTarget(TARGET)));
+
+  const t = toVec(Tm.S, Tm.C, Tm.A);
+  const p = toVec(Pm.S, Pm.C, Pm.A);
+  const d = { M: t.M - p.M, J0: t.J0 - p.J0, J45: t.J45 - p.J45 };
+  const o = fromVec(d.M, d.J0, d.J45);
+
+  TRUE.sph  = o.S;
+  TRUE.cyl  = o.C;
+  TRUE.axis = o.A;
+  TRUE.se   = d.M;
+
+  updateViews();
+}
+
+/* Render from TRUE */
+function updateViews(){
+  const sph  = TRUE.sph;
+  const cyl  = TRUE.cyl;
+  const axis = TRUE.axis;
+  const deltaSE = TRUE.se;
+
+  const s = Math.abs(deltaSE);
+  const primary   = s * K_BLUR_PER_D;
+  const secondary = (s >= 0.75) ? ((s - 0.5) * K_BLUR_PER_D) : 0;
+  const fcBlur = quant05(primary * FC_BLUR_GAIN);
+
+  let blurRed=0, blurBlue=0;
+  if (deltaSE > 0){ blurRed = primary; blurBlue = secondary; }
+  else if (deltaSE < 0){ blurBlue = primary; blurRed = secondary; }
+
+  redImg.style.filter  = `blur(${quant05(blurRed)}px)`;
+  blueImg.style.filter = `blur(${quant05(blurBlue)}px)`;
+
+  const mag = Math.abs(cyl) * PX_PER_D;
+  let ang = (axis % 180) * 2; ang -= 90;
+  const rad = ang * Math.PI / 180;
+  const shiftX = Math.round(Math.cos(rad) * mag);
+  const shiftY = Math.round(Math.sin(rad) * mag);
+
+  redOv.style.transform  = `translate(${shiftX}px, ${shiftY}px)`;
+  blueOv.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+
+  const extra = Math.abs(cyl) * EXTRA_ASTIG_BLUR_PER_D;
+  redOv.style.filter  = `blur(${quant05(blurRed  + extra)}px)`;
+  blueOv.style.filter = `blur(${quant05(blurBlue + extra)}px)`;
+  redOv.style.opacity = blueOv.style.opacity = OVERLAY_ALPHA;
+
+  const absC = Math.abs(cyl);
+  let imgName = "C025.png";
+  if(absC<=0.25) imgName="C025.png";
+  else if(absC<=0.50) imgName="C050.png";
+  else if(absC<=0.75) imgName="C075.png";
+  else if(absC<=1.00) imgName="C100.png";
+  else imgName="C150.png";
+  fanImg.src = `https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/${imgName}`;
+  fanImg.style.filter = `blur(${fcBlur}px)`;
+
+  const axisFC = (axis + 90) % 180;
+  const fcOffset = (deltaSE > 0) ? 90 : 0;
+  outer.style.transform = `rotate(${-(axisFC + fcOffset)}deg)`;
+}
+
+/* UI wiring */
+[sphInput, cylInput].forEach(el => el.addEventListener('input', recomputeOver));
+axisInput.addEventListener('input', ()=>{
+  axisInput.value = wrapAxis(axisInput.value||0);
+  recomputeOver();
+});
+axisInput.addEventListener('keydown', (e)=>{
+  if (e.key === 'ArrowUp')   { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value)||0) + AXIS_STEP); recomputeOver(); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value)||0) - AXIS_STEP); recomputeOver(); }
+});
+
+/* Letter size swap */
+sizeBtn.addEventListener('click', async ()=>{
+  letterSize = letterSize % 3 + 1;
+  sizeBtn.textContent = `Letter Size: ${letterSize===1?'Small':letterSize===2?'Medium':'Large'}`;
+  await applyLetterImages();
+  updateViews();
+});
+
+/* Show/Hide Target panel */
+targetToggleBtn.addEventListener('click', ()=>{
+  const open = targetPanel.style.display !== 'none';
+  targetPanel.style.display = open ? 'none' : 'block';
+  targetToggleBtn.textContent = open ? 'Show Target' : 'Hide Target';
+});
+
+/* Edit Target -> clamp + recompute */
+[tSph, tCyl].forEach(el=>{
+  el.addEventListener('input', ()=>{
+    TARGET.S = parseFloat(tSph.value)||0;
+    TARGET.C = parseFloat(tCyl.value)||0;
+    TARGET = clampTarget(TARGET);
+    tSph.value = TARGET.S.toFixed(2);
+    tCyl.value = TARGET.C.toFixed(2);
+    recomputeOver();
+  });
+});
+tAxis.addEventListener('input', ()=>{
+  TARGET.A = wrapAxis(tAxis.value||0);
+  tAxis.value = TARGET.A;
+  recomputeOver();
+});
+
+/* Randomize Target (within limits) */
+randBtn.addEventListener('click', ()=>{
+  const q = Math.round((Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN) * 4) / 4;
+  const c = - (Math.round((Math.random() * Math.abs(T_CYL_MIN)) * 4) / 4);
+  const a = Math.max(1, Math.min(180, Math.round(Math.random()*180) || 180));
+
+  TARGET = clampTarget({ S:q, C:c, A:a });
+
+  tSph.value  = TARGET.S.toFixed(2);
+  tCyl.value  = TARGET.C.toFixed(2);
+  tAxis.value = TARGET.A;
+  recomputeOver();
+});
+
+/* Plus ↔ Minus cyl toggle (Participant) */
+formToggleBtn.addEventListener('click', ()=>{
+  let S = parseFloat(sphInput.value)||0;
+  let C = parseFloat(cylInput.value)||0;
+  let A = wrapAxis(axisInput.value||0);
+
+  const S2 = S + C;
+  const C2 = -C;
+  const A2 = (wrapAxis(A + 90)) || 180;
+
+  sphInput.value  = S2.toFixed(2);
+  cylInput.value  = C2.toFixed(2);
+  axisInput.value = A2;
+
+  formToggleBtn.textContent = (C2 < 0) ? "To +cyl" : "To −cyl";
+  recomputeOver();
+});
+
+/* Reset participant */
+resetBtn.addEventListener('click', ()=>{
+  sphInput.value  = "0.00";
+  cylInput.value  = "0.00";
+  axisInput.value = "0";
+  formToggleBtn.textContent = "To −cyl";
+  recomputeOver();
+});
+
+/* Init */
+(async function init(){
+  await applyLetterImages();
+  sphInput.value = "0.00"; cylInput.value = "0.00"; axisInput.value = "180";
+  TARGET = clampTarget(TARGET);
+  tSph.value  = TARGET.S.toFixed(2);
+  tCyl.value  = TARGET.C.toFixed(2);
+  tAxis.value = TARGET.A;
+  formToggleBtn.textContent = (parseFloat(cylInput.value||"0") < 0) ? "To +cyl" : "To −cyl";
+  recomputeOver();
+})();
 </script>
 </body>
 </html>
