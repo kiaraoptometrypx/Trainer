@@ -335,7 +335,7 @@ function updateViews(){
 
   const axisFC = (axis + 90) % 180;
   const fcOffset = (deltaSE > 0) ? 90 : 0;
-  outer.style.transform = `rotate(${-(axisFC + fcOffset)}deg)`;
+outer.style.transform = `scaleX(-1) rotate(${-(axisFC + fcOffset)}deg)`;
 }
 
 /* UI wiring */
