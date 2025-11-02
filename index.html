@@ -8,7 +8,7 @@
   #currentRx { font-weight:500; font-size:15px; margin-bottom:10px; }
 
   .card{
-    background:#fff; border-radius:10px; padding:20px 80px;
+    background:#fff; border-radius:10px; padding:20px 70px;
     box-shadow:0 0 10px rgba(0,0,0,0.3); display:inline-block;
     border:1px solid darkgrey;
     margin:8px 0 14px;
@@ -88,19 +88,19 @@
 </head>
 <body>
 
-
-
+<div style="height:40px;"></div>
 <div id="currentRx">FANCHART & DUOCHROME TRAINER </div>
 
+<!-- Target Rx (single, bigger panel) -->
 <div id="targetPanel" style="
   display:none;
-  font-size:12px;               /* bigger text */
+  font-size:12px;
   line-height:1.6;
-  padding:16px 20px;            /* more padding */
+  padding:16px 20px;
   border:1px solid #bbb; 
   border-radius:12px;
   background:#fff;
-  max-width:520px;              /* roomy but tidy */
+  max-width:520px;
   margin:12px auto;
 ">
   <b style="font-size:14px;">Target Rx (hidden)</b><br>
@@ -115,24 +115,9 @@
   </div>
 </div>
 
-
-
-<div>
-<!-- Target Rx (hidden by default) -->
-<div id="targetPanel" style="display:none;">
-    <b>Target Rx (hidden)</b><br>
-    SPH <input type="number" id="tSph" step="0.25" value="-1.00">
-    CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
-    AXIS <input type="number" id="tAxis" step="5" value="180">
-    <div style="margin-top:6px; font-size:12px; color:#666;">
-      Limits: SPH +4.00…−7.00 · CYL 0 to −4.00 (minus) · AXIS 1–180
-  </div>
-</div>
-
 <!-- Participant Rx -->
 <div id="controls" class="card" style="font-size:15px;">
   You challenge is to find the RX that makes everything clear again!<br><br>
-
 
   <div style="display:flex; justify-content:center; gap:50px; flex-wrap:wrap; align-items:flex-start;">
     <!-- SPH -->
@@ -159,23 +144,26 @@
       </div>
     </div>
 
-    <!-- AXIS -->
-    <div style="text-align:center;">
-      <label><b>AXIS</b></label><br>
-      <input type="number" id="axis" step="5" value="180" class="rx-input"><br>
-      <div>
-        <button onclick="adj('axis',-5)" class="btn-minus">−5</button>
-        <button onclick="adj('axis',5)" class="btn-plus">+5</button>
-      </div>
-    </div>
+<!-- AXIS -->
+<div style="text-align:center;">
+  <label><b>AXIS</b></label><br>
+  <input type="number" id="axis" step="5" value="180" class="rx-input"><br>
+  <div>
+    <button onclick="adj('axis', -5)"  class="btn-minus">−5</button>
+    <button onclick="adj('axis',  5)"  class="btn-plus">+5</button><br>
+    <button onclick="adj('axis', -20)" class="btn-minus">−20</button>
+    <button onclick="adj('axis',  20)" class="btn-plus">+20</button>
   </div>
+</div>
+</div>
+
 
   <div style="height:15px"></div>
 
   <div class="row btn-group">
     <button id="resetBtn">Reset Participant</button>
     <button id="sizeBtn">Letter Size: Medium</button>
-    <button id="formToggleBtn">To +cyl</button>
+    <button id="formToggleBtn">To −cyl</button>
   </div>
 
   <div style="height:5px"></div>
@@ -195,10 +183,6 @@
     <div><b>DIRECTION ▶</b> Align with the darkest fan line.</div>
     <div><b>LINES DARKNESS ▶</b> Increase +CYL until all lines appear equal.</div>
   </div>
-</div>
-
-
-
 </div>
 
 <div style="height:10px"></div>
@@ -236,8 +220,6 @@
     </div>
   </div>
 </div>
-
-
 
 <script>
 /* =========================
@@ -335,7 +317,6 @@ function normalizeMinus(S, C, A){
   } else A = wrapAxis(A);
   return { S, C, A };
 }
-
 function clampTarget(obj){
   let S = clamp((+obj.S || 0), T_SPH_MIN, T_SPH_MAX);
   let C = (+obj.C || 0);
@@ -368,6 +349,7 @@ function getParticipantMinus(){
   return normalizeMinus(S, C, A);
 }
 
+/* Compute Over-Rx */
 function recomputeOver(){
   const Pm = getParticipantMinus();
   const Tm = normalizeMinus(...Object.values(clampTarget(TARGET)));
@@ -385,6 +367,7 @@ function recomputeOver(){
   updateViews();
 }
 
+/* Render from TRUE */
 function updateViews(){
   const cyl  = TRUE.cyl;
   const axis = TRUE.axis;
@@ -477,15 +460,17 @@ tAxis.addEventListener('input', ()=>{
   recomputeOver(); updateCoach();
 });
 
-/* Generate NEW random target Rx */
+/* Generate NEW random target Rx (¼-step, CYL in [-4,0]) */
 randBtn.addEventListener('click', () => {
-  const randS = quant05(Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN);
-  const randC = quant05(Math.random() * (T_CYL_MIN - 0) + T_CYL_MIN); // negative to 0
+  const randS = Math.round((Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN) * 4) / 4;
+  const randC = Math.round((Math.random() * (0 - T_CYL_MIN) + T_CYL_MIN) * 4) / 4; // stays ≤ 0
   const randA = Math.floor(Math.random() * 180) + 1;
+
   TARGET = clampTarget({ S: randS, C: randC, A: randA });
-  tSph.value = TARGET.S.toFixed(2);
-  tCyl.value = TARGET.C.toFixed(2);
+  tSph.value  = TARGET.S.toFixed(2);
+  tCyl.value  = TARGET.C.toFixed(2);
   tAxis.value = TARGET.A;
+
   recomputeOver(); updateCoach();
 });
 
@@ -495,7 +480,6 @@ formToggleBtn.addEventListener('click', ()=>{
   let C = parseFloat(cylInput.value)||0;
   let A = wrapAxis(axisInput.value||0);
 
-  // convert (S, C, A) to the other form
   const S2 = S + C;
   const C2 = -C;
   const A2 = (wrapAxis(A + 90)) || 180;
@@ -504,7 +488,7 @@ formToggleBtn.addEventListener('click', ()=>{
   cylInput.value  = C2.toFixed(2);
   axisInput.value = A2;
 
-  // Button label indicates the *action* next
+  // Button label indicates the action next
   formToggleBtn.textContent = (C2 < 0) ? "To +cyl" : "To −cyl";
 
   recomputeOver(); updateCoach();
@@ -515,20 +499,12 @@ resetBtn.addEventListener('click', ()=>{
   sphInput.value  = "0.00";
   cylInput.value  = "0.00";
   axisInput.value = "180";
-  formToggleBtn.textContent = "To +cyl";
+  formToggleBtn.textContent = "To −cyl"; // start again in +cyl view (button shows next action)
   recomputeOver(); updateCoach();
 });
 
 const isPlusCylMode = () => formToggleBtn.textContent.includes("−cyl");
-
-
 </script>
-
-
-
-
-
-
 
 <script>
 /* ===========================
@@ -548,35 +524,30 @@ function updateCoach(){
     sphMsg = "Excellent — red slightly clearer, proceed to axis adjustment.";
   else sphMsg = "Add plus, blue cannot be clearer.";
 
-// --- AXIS Hint vs TARGET (flip 90° if +cyl view)
-let targetAxis = TARGET.A || 180;
-if (isPlusCylMode()) {
-  targetAxis = (targetAxis + 90) % 180 || 180;
-}
-
+  // --- AXIS Hint vs TARGET (flip 90° if +cyl view)
+  let targetAxis = TARGET.A || 180;
+  if (isPlusCylMode()) {
+    targetAxis = (targetAxis + 90) % 180 || 180;
+  }
   let diff = Math.abs(userAxis - targetAxis);
   if (diff > 90) diff = 180 - diff;
 
-/* --- NEW: minimal override for DUOCHROME line when cyl & axis are essentially correct --- */
-if (cylM < 0.01 && diff <= 5) {
-  const seNow = TRUE.se || 0;
-  if (Math.abs(seNow) <= 0.05) {
-    // perfectly balanced
-    sphMsg = "Excellent! Looks balanced";
-  } else {
-    // give sharpening instruction + direction
-    sphMsg = "Since CYL and AXIS is balance, fix the duochrome.";
-    if (seNow > 0) {
-      // blue side is clearer
-      sphMsg += " Blue is clearer, add more plus.";
-    } else if (seNow < 0) {
-      // red side is clearer
-      sphMsg += " Red is clearer, add more minus.";
+  // --- Minimal override for DUOCHROME line when cyl & axis essentially correct
+  if (cylM < 0.01 && diff <= 5) {
+    const seNow = TRUE.se || 0;
+    if (Math.abs(seNow) <= 0.05) {
+      sphMsg = "Excellent! Looks balanced";
+    } else {
+      sphMsg = "Since CYL and AXIS is balance, fix the duochrome.";
+      if (seNow > 0) {
+        sphMsg += " Blue is clearer, add more plus.";
+      } else if (seNow < 0) {
+        sphMsg += " Red is clearer, add more minus.";
+      }
     }
   }
-}
 
-
+  // --- AXIS Hint tiers (keep wording)
   let axisMsg = "";
   if (diff > 25) axisMsg = "Still far — put AXIS to align with darker line.";
   else if (diff >= 6 && diff <= 25) axisMsg = "Almost there — fine-tune closer to darkest fan line.";
@@ -607,27 +578,25 @@ if (cylM < 0.01 && diff <= 5) {
 /* Initialization */
 (async function init(){
   await applyLetterImages();
+
+  // Start participant values
   sphInput.value = "0.00"; 
   cylInput.value = "0.00"; 
   axisInput.value = "180";
+
+  // Clamp and show target
   TARGET = clampTarget(TARGET);
   tSph.value = TARGET.S.toFixed(2);
   tCyl.value = TARGET.C.toFixed(2);
   tAxis.value = TARGET.A;
 
-  // Start in +cyl mode (button shows the mode you will switch TO)
+  // Start in +cyl view for Smart Coach comparison (button shows the next action)
   formToggleBtn.textContent = "To −cyl";
 
   recomputeOver();
   updateCoach();
 })();
-
 </script>
-
-
-
-
-
 
 </body>
 </html>
