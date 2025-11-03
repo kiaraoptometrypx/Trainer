@@ -2,123 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Duochrome Trainer — Over-Rx = Target − Participant (J0/J45, ΔM) + Cyl Toggle + Reset + Target Limits</title>
+<title>Refraction Trainer</title>
 <style>
   body { font-family: system-ui, sans-serif; background:#fff; text-align:center; margin:20px; }
-  #currentRx { font-weight:500; font-size:15px; margin-bottom:10px; }
+  #currentRx { font-weight:600; font-size:16px; margin-bottom:10px; }
 
-  .card{
-    background:#fff; border-radius:10px; padding:20px 70px;
-    box-shadow:0 0 10px rgba(0,0,0,0.3); display:inline-block;
-    border:1px solid darkgrey;
-    margin:8px 0 14px;
-  }
+  .card{ background:#fff; border-radius:10px; padding:20px 10px;
+    box-shadow:0 0 10px rgba(0,0,0,.25); display:inline-block; border:1px solid #bbb; margin:8px 0 14px; }
   .row input[type=number]{ width:70px; text-align:center; }
   .row b{ display:inline-block; margin-bottom:6px; }
   button{ margin:5px; padding:5px 10px; cursor:pointer; }
 
-  /* Duochrome stage */
-  .duochrome{
-    display:flex; justify-content:center; align-items:center;
-    width:300px; height:300px; margin:20px auto; position:relative;
-    overflow:hidden;
-  }
-  .duo-side{
-    position:relative; width:150px; height:300px;
-    display:flex; align-items:center; justify-content:center;
-    overflow: clip; contain: paint; isolation: isolate;
-  }
-  @supports not (overflow: clip) { .duo-side { overflow: hidden; } }
-
-  /* Trim 10px edges */
+  /* Duochrome */
+  .duochrome{ display:flex; justify-content:center; align-items:center; width:300px; height:300px; margin:20px auto; position:relative; overflow:hidden; }
+  .duo-side{ position:relative; width:150px; height:300px; display:flex; align-items:center; justify-content:center; overflow:clip; contain:paint; isolation:isolate; }
+  @supports not (overflow: clip) { .duo-side { overflow:hidden; } }
   #redSide  { clip-path: inset(0 0 0 10px); }
   #blueSide { clip-path: inset(0 10px 0 0); }
-
-  .duo-side img.base{
-    width:150px; height:300px; object-fit:cover; display:block;
-    transition:none; will-change: filter;
-  }
-  .duo-side img.overlay{
-    position:absolute; left:0; top:0;
-    width:150px; height:300px; object-fit:cover; pointer-events:none;
-    transition:none; will-change: transform, filter, opacity;
-    backface-visibility:hidden; transform: translate3d(0,0,0);
-  }
+  .duo-side img.base{ width:150px; height:300px; object-fit:cover; display:block; transition:none; will-change:filter; }
+  .duo-side img.overlay{ display:none; position:absolute; left:0; top:0; width:150px; height:300px; object-fit:cover; pointer-events:none; transition:none; will-change:transform, filter, opacity; backface-visibility:hidden; transform: translate3d(0,0,0); }
 
   /* Fan chart */
-  .outer-circle{
-    width:250px; height:250px; border-radius:50%; border:none;
-    overflow:hidden; display:flex; align-items:center; justify-content:center;
-    margin:40px auto; transform-origin:center;
-  }
-  .circular-img img{
-    width:300px; height:auto; object-fit:cover; object-position:center;
-    transform-origin:center;
-  }
+  .outer-circle{ width:250px; height:250px; border-radius:50%; border:none; overflow:hidden; display:flex; align-items:center; justify-content:center; margin:40px auto; transform-origin:center; }
+  .circular-img img{ width:300px; height:auto; object-fit:cover; object-position:center; transform-origin:center; }
 
-  /* Side-by-side layout for duochrome + fan chart */
-  #stage {
-    display: flex;
-    gap: 50px;
-    align-items: center;
-    justify-content: center;
-  }
-  .duochrome, .outer-circle { margin: 12px 0; }
+  /* Layout */
+  #stage { display:flex; gap:50px; align-items:center; justify-content:center; }
+  .duochrome, .outer-circle { margin:12px 0; }
 
-  .rx-input {
-    width: 120px; font-size: 12px; text-align: center;
-    padding: 6px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 5px;
-  }
-  .btn-plus, .btn-minus {
-    font-size: 14px; border: 1px solid black; padding: 6px 10px;
-    border-radius: 6px; cursor: pointer; color: #fff; transition: opacity 0.2s; margin: 2px;
-  }
-  .btn-plus { background-color: #2e8b57; }  /* Kiara green */
-  .btn-minus { background-color: #d9534f; } /* soft red */
-  .btn-plus:hover, .btn-minus:hover { opacity: 0.8; }
+  .rx-input { width:120px; font-size:12px; text-align:center; padding:6px; border-radius:6px; border:1px solid #ccc; margin-bottom:5px; }
+  .btn-plus, .btn-minus { font-size:14px; border:1px solid #000; padding:6px 10px; border-radius:6px; cursor:pointer; color:#fff; transition:opacity .2s; margin:2px; }
+  .btn-plus { background:#2e8b57; } .btn-minus{ background:#d9534f; }
+  .btn-plus:hover, .btn-minus:hover { opacity:.85; }
+  .btn-group button { font-size:12px; padding:5px 5px; margin:5px; border:1px solid #000; border-radius:10px; cursor:pointer; background:#dcdcdc; color:#000; min-width:160px; }
+  .btn-group button:hover { background:#c8c8c8; }
 
-  .btn-group button {
-    font-size: 12px; padding: 5px 5px; margin: 5px;
-    border: 1px solid black; border-radius: 10px; cursor: pointer;
-    background-color: lightgrey; color: black; min-width: 160px;
-  }
-  .btn-group button:hover { background-color: darkgrey; }
-  .btn-group button:active { transform: scale(0.98); }
+  /* Answer row */
+  #targetPanel input{ width:60px; font-size:12px; padding:5px; text-align:center; margin:2px 2px; border-radius:5px; }
 </style>
 </head>
 <body>
 
-<div style="height:40px;"></div>
-<div id="currentRx">FANCHART & DUOCHROME TRAINER </div>
+<div style="height:10px;"></div>
+<div id="currentRx">FANCHART & DUOCHROME TRAINER</div>
 
-<!-- Target Rx (single, bigger panel) -->
-<div id="targetPanel" style="
-  display:none;
-  font-size:12px;
-  line-height:1.6;
-  padding:16px 20px;
-  border:1px solid #bbb; 
-  border-radius:12px;
-  background:#fff;
-  max-width:520px;
-  margin:12px auto;
-">
-  <b style="font-size:14px;">Target Rx (hidden)</b><br>
-  SPH 
-  <input type="number" id="tSph" step="0.25" value="-1.00" style="width:80px; font-size:12px; padding:8px; margin:6px 10px 6px 6px;">
-  CYL 
-  <input type="number" id="tCyl" step="0.25" value="-1.00" style="width:80px; font-size:12px; padding:8px; margin:6px 10px;">
-  AXIS 
-  <input type="number" id="tAxis" step="5" value="180" style="width:80px; font-size:12px; padding:8px; margin:6px 0 6px 10px;">
-  <div style="margin-top:10px; font-size:12px; color:#666;">
-    Limits: SPH +4.00…−7.00 · CYL 0 to −4.00 (minus) · AXIS 1–180
-  </div>
-</div>
-
-<!-- Participant Rx -->
-<div id="controls" class="card" style="font-size:15px;">
-  You challenge is to find the RX that makes everything clear again!<br><br>
-
+<!-- Controls -->
+<div id="controls" class="card" style="font-size:15px; width:550px">
+  Your challenge is to find the RX that makes everything clear again!<br><br>
   <div style="display:flex; justify-content:center; gap:50px; flex-wrap:wrap; align-items:flex-start;">
     <!-- SPH -->
     <div style="text-align:center;">
@@ -126,9 +56,9 @@
       <input type="number" id="sph" step="0.25" value="0.00" class="rx-input"><br>
       <div>
         <button onclick="adj('sph',-0.25)" class="btn-minus">−0.25</button>
-        <button onclick="adj('sph',0.25)" class="btn-plus">+0.25</button><br>
+        <button onclick="adj('sph', 0.25)" class="btn-plus">+0.25</button><br>
         <button onclick="adj('sph',-1.00)" class="btn-minus">−1.00</button>
-        <button onclick="adj('sph',1.00)" class="btn-plus">+1.00</button>
+        <button onclick="adj('sph', 1.00)" class="btn-plus">+1.00</button>
       </div>
     </div>
 
@@ -138,70 +68,91 @@
       <input type="number" id="cyl" step="0.25" value="0.00" class="rx-input"><br>
       <div>
         <button onclick="adj('cyl',-0.25)" class="btn-minus">−0.25</button>
-        <button onclick="adj('cyl',0.25)" class="btn-plus">+0.25</button><br>
+        <button onclick="adj('cyl', 0.25)" class="btn-plus">+0.25</button><br>
         <button onclick="adj('cyl',-1.00)" class="btn-minus">−1.00</button>
-        <button onclick="adj('cyl',1.00)" class="btn-plus">+1.00</button>
+        <button onclick="adj('cyl', 1.00)" class="btn-plus">+1.00</button>
       </div>
     </div>
 
-<!-- AXIS -->
-<div style="text-align:center;">
-  <label><b>AXIS</b></label><br>
-  <input type="number" id="axis" step="5" value="180" class="rx-input"><br>
-  <div>
-    <button onclick="adj('axis', -5)"  class="btn-minus">−5</button>
-    <button onclick="adj('axis',  5)"  class="btn-plus">+5</button><br>
-    <button onclick="adj('axis', -20)" class="btn-minus">−20</button>
-    <button onclick="adj('axis',  20)" class="btn-plus">+20</button>
-  </div>
-</div>
-</div>
-
-
-  <div style="height:15px"></div>
-
-  <div class="row btn-group">
-    <button id="resetBtn">Reset Participant</button>
-    <button id="sizeBtn">Letter Size: Medium</button>
-    <button id="formToggleBtn">To −cyl</button>
-  </div>
-
-  <div style="height:5px"></div>
-  <div class="row btn-group">
-    <button id="randBtn">New Target</button>
-    <button id="targetToggleBtn">Show Target</button>
+    <!-- AXIS -->
+    <div style="text-align:center;">
+      <label><b>AXIS</b></label><br>
+      <input type="number" id="axis" step="5" value="180" class="rx-input"><br>
+      <div>
+        <button onclick="adj('axis', -5)"  class="btn-minus">−5</button>
+        <button onclick="adj('axis',  5)"  class="btn-plus">+5</button><br>
+        <button onclick="adj('axis',-20)"  class="btn-minus">−20</button>
+        <button onclick="adj('axis', 20)"  class="btn-plus">+20</button>
+      </div>
+    </div>
   </div>
 
   <div style="height:10px"></div>
-
-  <!-- Smart Coach Box -->
-  <div id="coachBox" style="
-    margin-top:20px; background:#fffdf0; border:1px solid #ccc;
-    border-radius:10px; padding:12px 20px; display:inline-block;
-    text-align:left; font-size:12px; line-height:1.5; width:620px;">
-    <div><b>DUOCHROME ▶</b> Adjust SPH until red side is slightly clearer.</div>
-    <div><b>DIRECTION ▶</b> Align with the darkest fan line.</div>
-    <div><b>LINES DARKNESS ▶</b> Increase +CYL until all lines appear equal.</div>
+  <div class="row btn-group">
+    <button id="resetBtn">Reset Rx to 0</button>
+    <button id="sizeBtn">Change Letter Size</button>
+    <button id="formToggleBtn">Convert Cyl</button>
   </div>
 </div>
 
 <div style="height:10px"></div>
+<div class="row btn-group">
+  <button style="background:#fffdf0; width:150px;" id="randBtn">New Test</button>
+  <button style="background:#fffdf0; width:150px;" id="targetToggleBtn">Show Answer</button></div>
 
+
+<!-- Answer -->
+<div id="targetPanel" style="border:none; display:none; width:550px; margin:10px auto;">
+  <span><b>ANSWER:</b>&nbsp;&nbsp;&nbsp;</span>
+  SPH <input type="number" id="tSph" step="0.25" value="-1.00">
+  CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
+  AXIS <input type="number" id="tAxis" step="5"   value="180">
+</div>
+
+
+
+
+
+
+
+
+<!-- Smart Coach -->
+<div id="coachBox" class="card" style="background:#fffdf0; display:inline-block; text-align:left; font-size:12px; width:550px;">
+</div>
+<div class="row btn-group">
+  <button style="background:#fffdf0; width:150px;" id="coachStatusBtn">Show Status</button>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="height:10px"></div>
+
+
+<!-- Stage -->
 <div id="stage">
   <!-- Fan Chart (LEFT) -->
   <div id="stack" style="position:relative; width:400px; margin:0 0 20px 0;">
-    <img class="bg"
-         src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/FC_DIRECTIONS.png"
-         alt="Fan Chart Directions"
-         style="width:100%; display:block;" />
+    <img class="bg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/FC_DIRECTIONS.png" alt="" style="width:100%; display:block;" />
     <div class="overlay" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
       <div class="overlay-stage">
         <div class="outer-circle" id="outerCircle" style="width:100%; aspect-ratio:1/1; border-radius:9999px; overflow:hidden;">
           <div class="circular-img" style="width:100%; height:100%;">
-            <img id="fanChart"
-                 src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/C025.png"
-                 alt="Fan Chart"
-                 style="width:100%; height:100%; object-fit:cover;" />
+            <img id="fanChart" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/C025.png" alt="" style="width:100%; height:100%; object-fit:cover;" />
           </div>
         </div>
       </div>
@@ -211,12 +162,12 @@
   <!-- Duochrome (RIGHT) -->
   <div class="duochrome">
     <div class="duo-side" id="redSide">
-      <img class="base" id="redImg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/RED_2.png" alt="Red">
-      <img class="overlay" id="redOv" alt="Red overlay">
+      <img class="base" id="redImg"  src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/RED_2.png"  alt="">
+      <img class="overlay" id="redOv"  alt="">
     </div>
     <div class="duo-side" id="blueSide">
-      <img class="base" id="blueImg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/BLUE_2.png" alt="Blue">
-      <img class="overlay" id="blueOv" alt="Blue overlay">
+      <img class="base" id="blueImg" src="https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/BLUE_2.png" alt="">
+      <img class="overlay" id="blueOv" alt="">
     </div>
   </div>
 </div>
@@ -241,28 +192,21 @@ function adj(type, step){
 </script>
 
 <script>
-/* ===== Tunables ===== */
-const PX_PER_D = 2;
-const K_BLUR_PER_D = 2.0;
-const EXTRA_ASTIG_BLUR_PER_D = 0.40;
-const OVERLAY_ALPHA = 0.60;
-const AXIS_STEP = 5;
-/* Target limits */
-const T_SPH_MIN = -7.00, T_SPH_MAX = +4.00;
-const T_CYL_MIN = -4.00, T_CYL_MAX = 0.00;
-/* ===================== */
+/* ===== Tunables & State ===== */
+const PX_PER_D = 2, K_BLUR_PER_D = 2.0, EXTRA_ASTIG_BLUR_PER_D = 0.40, OVERLAY_ALPHA = 0.60, AXIS_STEP = 5;
+const T_SPH_MIN = -7.00, T_SPH_MAX = +4.00, T_CYL_MIN = -4.00, T_CYL_MAX = 0.00;
+const FC_BLUR_GAIN = 0.50;
 
 const redImg = document.getElementById('redImg');
 const blueImg = document.getElementById('blueImg');
-const redOv = document.getElementById('redOv');
+const redOv  = document.getElementById('redOv');
 const blueOv = document.getElementById('blueOv');
 const fanImg = document.getElementById('fanChart');
-const outer = document.getElementById('outerCircle');
-const FC_BLUR_GAIN = 0.50;
+const outer  = document.getElementById('outerCircle');
 
 const sphInput = document.getElementById('sph');
 const cylInput = document.getElementById('cyl');
-const axisInput = document.getElementById('axis');
+const axisInput= document.getElementById('axis');
 
 const randBtn = document.getElementById('randBtn');
 const sizeBtn = document.getElementById('sizeBtn');
@@ -273,15 +217,17 @@ const resetBtn = document.getElementById('resetBtn');
 const targetPanel = document.getElementById('targetPanel');
 const tSph = document.getElementById('tSph');
 const tCyl = document.getElementById('tCyl');
-const tAxis = document.getElementById('tAxis');
+const tAxis= document.getElementById('tAxis');
 
 let letterSize = 2;
 let TARGET = { S: -1.00, C: -1.00, A: 180 };
-let TRUE = { sph: 0, cyl: 0, axis: 180, se: 0 };
+let TRUE   = { sph: 0, cyl: 0, axis: 180, se: 0 };
+let IS_PLUS_CYL = false;
+let COACH_STAGE = 1;      // 1=DUOCHROME, 2=AXIS, 3=CYL
+let STARTED = false;      // gated start
 
-/* Preload Assets */
-const SIZES = [1,2,3];
-const cache = {};
+/* Preload + safe overlay src */
+const SIZES = [1,2,3], cache = {};
 (function preloadAll(){
   SIZES.forEach(sz=>{
     ["RED","BLUE"].forEach(col=>{
@@ -291,15 +237,21 @@ const cache = {};
     });
   });
 })();
-
 async function applyLetterImages(){
   const rKey = `RED_${letterSize}`, bKey = `BLUE_${letterSize}`;
-  await Promise.all([cache[rKey].decode?.().catch(()=>{}), cache[bKey].decode?.().catch(()=>{})]);
-  redImg.src = cache[rKey].src;  redOv.src = cache[rKey].src;
-  blueImg.src = cache[bKey].src; blueOv.src = cache[bKey].src;
+  await Promise.all([ cache[rKey].decode?.().catch(()=>{}), cache[bKey].decode?.().catch(()=>{}) ]);
+  redImg.src  = cache[rKey].src;
+  blueImg.src = cache[bKey].src;
+  redOv.src   = cache[rKey].src;
+  blueOv.src  = cache[bKey].src;
+  redOv.style.display  = 'block';
+  blueOv.style.display = 'block';
 }
 
 /* Helpers */
+
+
+
 const quant05 = v => Math.round(v*2)/2;
 function wrapAxis(val){
   const n = parseFloat(val);
@@ -310,23 +262,20 @@ function wrapAxis(val){
 }
 function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
 
-/* Normalize to minus cyl */
+/* Minus-cyl normalize + target clamp */
 function normalizeMinus(S, C, A){
-  if (C > 0){
-    S = S + C; C = -C; A = (wrapAxis(A + 90)) || 180;
-  } else A = wrapAxis(A);
+  if (C > 0){ S = S + C; C = -C; A = (wrapAxis(A + 90)) || 180; }
+  else A = wrapAxis(A);
   return { S, C, A };
 }
 function clampTarget(obj){
   let S = clamp((+obj.S || 0), T_SPH_MIN, T_SPH_MAX);
-  let C = (+obj.C || 0);
-  if (C > 0) C = -C;
-  C = clamp(C, T_CYL_MIN, T_CYL_MAX);
+  let C = (+obj.C || 0); if (C > 0) C = -C; C = clamp(C, T_CYL_MIN, T_CYL_MAX);
   let A = wrapAxis(+obj.A || 180);
   return { S, C, A };
 }
 
-/* Power-vector math */
+/* Power-vectors */
 function toVec(S, C, Adeg){
   const rad2 = (2*Adeg) * Math.PI/180;
   const M  = S + C/2;
@@ -353,35 +302,23 @@ function getParticipantMinus(){
 function recomputeOver(){
   const Pm = getParticipantMinus();
   const Tm = normalizeMinus(...Object.values(clampTarget(TARGET)));
-
   const t = toVec(Tm.S, Tm.C, Tm.A);
   const p = toVec(Pm.S, Pm.C, Pm.A);
   const d = { M: t.M - p.M, J0: t.J0 - p.J0, J45: t.J45 - p.J45 };
   const o = fromVec(d.M, d.J0, d.J45);
-
-  TRUE.sph  = o.S;
-  TRUE.cyl  = o.C;
-  TRUE.axis = o.A;
-  TRUE.se   = d.M;
-
+  TRUE.sph  = o.S; TRUE.cyl  = o.C; TRUE.axis = o.A; TRUE.se = d.M;
   updateViews();
 }
 
-/* Render from TRUE */
+/* Render */
 function updateViews(){
-  const cyl  = TRUE.cyl;
-  const axis = TRUE.axis;
-  const deltaSE = TRUE.se;
-
-  const s = Math.abs(deltaSE);
-  const primary   = s * K_BLUR_PER_D;
-  const secondary = (s >= 0.75) ? ((s - 0.5) * K_BLUR_PER_D) : 0;
+  const cyl  = TRUE.cyl, axis = TRUE.axis, deltaSE = TRUE.se;
+  const s = Math.abs(deltaSE), primary = s * K_BLUR_PER_D, secondary = (s >= 0.75) ? ((s - 0.5) * K_BLUR_PER_D) : 0;
   const fcBlur = quant05(primary * FC_BLUR_GAIN);
 
   let blurRed=0, blurBlue=0;
   if (deltaSE > 0){ blurRed = primary; blurBlue = secondary; }
   else if (deltaSE < 0){ blurBlue = primary; blurRed = secondary; }
-
   redImg.style.filter  = `blur(${quant05(blurRed)}px)`;
   blueImg.style.filter = `blur(${quant05(blurBlue)}px)`;
 
@@ -390,7 +327,6 @@ function updateViews(){
   const rad = ang * Math.PI / 180;
   const shiftX = Math.round(Math.cos(rad) * mag);
   const shiftY = Math.round(Math.sin(rad) * mag);
-
   redOv.style.transform  = `translate(${shiftX}px, ${shiftY}px)`;
   blueOv.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
 
@@ -401,11 +337,11 @@ function updateViews(){
 
   const absC = Math.abs(cyl);
   let imgName = "C025.png";
-  if(absC<=0.25) imgName="C025.png";
-  else if(absC<=0.50) imgName="C050.png";
-  else if(absC<=0.75) imgName="C075.png";
-  else if(absC<=1.00) imgName="C100.png";
-  else imgName="C150.png";
+  if      (absC <= 0.25) imgName="C025.png";
+  else if (absC <= 0.50) imgName="C050.png";
+  else if (absC <= 0.75) imgName="C075.png";
+  else if (absC <= 1.00) imgName="C100.png";
+  else                   imgName="C150.png";
   fanImg.src = `https://raw.githubusercontent.com/kiaraoptometrypx/Trainer/main/${imgName}`;
   fanImg.style.filter = `blur(${fcBlur}px)`;
 
@@ -415,99 +351,7 @@ function updateViews(){
 
   updateCoach();
 }
-
-/* Input Wiring */
-[sphInput, cylInput].forEach(el => el.addEventListener('input', ()=>{recomputeOver();}));
-axisInput.addEventListener('input', ()=>{
-  axisInput.value = wrapAxis(axisInput.value||0);
-  recomputeOver(); updateCoach();
-});
-axisInput.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp") { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value) || 0) + AXIS_STEP); }
-  if (e.key === "ArrowDown") { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value) || 0) - AXIS_STEP); }
-  recomputeOver(); updateCoach();
-});
-
-/* Size switch */
-sizeBtn.addEventListener('click', async ()=>{
-  letterSize = letterSize % 3 + 1;
-  sizeBtn.textContent = `Letter Size: ${letterSize===1?'Small':letterSize===2?'Medium':'Large'}`;
-  await applyLetterImages();
-  updateViews();
-});
-
-/* Show / Hide Target Panel */
-targetToggleBtn.addEventListener('click', () => {
-  const open = targetPanel.style.display !== "none";
-  targetPanel.style.display = open ? "none" : "block";
-  targetToggleBtn.textContent = open ? "Show Target" : "Hide Target";
-});
-
-/* Edit Target -> clamp + recompute */
-[tSph, tCyl].forEach(el=>{
-  el.addEventListener('input', ()=>{
-    TARGET.S = parseFloat(tSph.value)||0;
-    TARGET.C = parseFloat(tCyl.value)||0;
-    TARGET = clampTarget(TARGET);
-    tSph.value = TARGET.S.toFixed(2);
-    tCyl.value = TARGET.C.toFixed(2);
-    recomputeOver(); updateCoach();
-  });
-});
-tAxis.addEventListener('input', ()=>{
-  TARGET.A = wrapAxis(tAxis.value||0);
-  tAxis.value = TARGET.A;
-  recomputeOver(); updateCoach();
-});
-
-/* Generate NEW random target Rx (¼-step, CYL in [-4,0]) */
-randBtn.addEventListener('click', () => {
-  const randS = Math.round((Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN) * 4) / 4;
-  const randC = Math.round((Math.random() * (0 - T_CYL_MIN) + T_CYL_MIN) * 4) / 4; // stays ≤ 0
-  const randA = Math.floor(Math.random() * 180) + 1;
-
-  TARGET = clampTarget({ S: randS, C: randC, A: randA });
-  tSph.value  = TARGET.S.toFixed(2);
-  tCyl.value  = TARGET.C.toFixed(2);
-  tAxis.value = TARGET.A;
-
-  recomputeOver(); updateCoach();
-});
-
-/* Plus ↔ Minus cyl toggle (Participant) */
-formToggleBtn.addEventListener('click', ()=>{
-  let S = parseFloat(sphInput.value)||0;
-  let C = parseFloat(cylInput.value)||0;
-  let A = wrapAxis(axisInput.value||0);
-
-  const S2 = S + C;
-  const C2 = -C;
-  const A2 = (wrapAxis(A + 90)) || 180;
-
-  sphInput.value  = S2.toFixed(2);
-  cylInput.value  = C2.toFixed(2);
-  axisInput.value = A2;
-
-  // Button label indicates the action next
-  formToggleBtn.textContent = (C2 < 0) ? "To +cyl" : "To −cyl";
-
-  recomputeOver(); updateCoach();
-});
-
-/* Reset participant */
-resetBtn.addEventListener('click', ()=>{
-  sphInput.value  = "0.00";
-  cylInput.value  = "0.00";
-  axisInput.value = "180";
-  formToggleBtn.textContent = "To −cyl"; // start again in +cyl view (button shows next action)
-  recomputeOver(); updateCoach();
-});
-
-const isPlusCylMode = () => formToggleBtn.textContent.includes("−cyl");
 </script>
-
-
-
 
 
 
@@ -520,95 +364,307 @@ const isPlusCylMode = () => formToggleBtn.textContent.includes("−cyl");
 
 
 <script>
-/* ===========================
-   SMART COACH v2 (Live Hints)
-=========================== */
-function updateCoach(){
-  // Always take live axis for reactivity
-  const se   = TRUE.se;
-  const cylM = Math.abs(TRUE.cyl);
-  const userAxis = wrapAxis(axisInput.value || 180);
+/* ============ Inputs & UI ============ */
+[sphInput, cylInput].forEach(el => el.addEventListener('input', recomputeOver));
 
-  // --- SPH Hint (keep wording)
-  let sphMsg = "";
-  if (se < -0.75) sphMsg = "Too blur — increase minus power.";
-  else if (se > 0) sphMsg = "Add plus until red side slightly clearer.";
-  else if (se <= -0.25 && se >= -0.75)
-    sphMsg = "Excellent — red slightly clearer, proceed to axis adjustment.";
-  else sphMsg = "Add plus, blue cannot be clearer.";
-
-  // --- AXIS Hint vs TARGET (flip 90° if +cyl view)
-  let targetAxis = TARGET.A || 180;
-  if (isPlusCylMode()) {
-    targetAxis = (targetAxis + 90) % 180 || 180;
-  }
-  let diff = Math.abs(userAxis - targetAxis);
-  if (diff > 90) diff = 180 - diff;
-
-  // --- Minimal override for DUOCHROME line when cyl & axis essentially correct
-  if (cylM < 0.01 && diff <= 5) {
-    const seNow = TRUE.se || 0;
-    if (Math.abs(seNow) <= 0.05) {
-      sphMsg = "Excellent! Looks balanced";
-    } else {
-      sphMsg = "Since CYL and AXIS is balance, fix the duochrome.";
-      if (seNow > 0) {
-        sphMsg += " Blue is clearer, add more plus.";
-      } else if (seNow < 0) {
-        sphMsg += " Red is clearer, add more minus.";
-      }
-    }
-  }
-
-  // --- AXIS Hint tiers (keep wording)
-  let axisMsg = "";
-  if (diff > 25) axisMsg = "Still far — put AXIS to align with darker line.";
-  else if (diff >= 6 && diff <= 25) axisMsg = "Almost there — fine-tune closer to darkest fan line.";
-  else if (diff >= 0 && diff <= 5) axisMsg = "Excellent — proceed to check cyl power.";
-  else axisMsg = "Still far — put AXIS to align with darker line.";
-
-  // --- CYL Hint (keep wording)
-  let cylMsg = "";
-  if (cylM < 0.25) cylMsg = "Excellent — proceed to balance duochrome.";
-  else if (cylM >= 0.25 && cylM <= 0.75)
-    cylMsg = "Almost there — a little imbalanced.";
-  else cylMsg = "Too uneven — recheck axis then add plus cyl until lines start balancing.";
-
-  const box = document.getElementById("coachBox");
-  if (box) {
-    box.innerHTML =
-      `<div><b>DUOCHROME - Sph Adjustment ▶</b> ${sphMsg}</div>` +
-      `<div><b>DIRECTION - Axis Adjustment  ▶</b> ${axisMsg}</div>` +
-      `<div><b>LINES DARKNESS - Cyl Adjustment ▶</b> ${cylMsg}</div>`;
-  }
-}
-
-/* Reactive binding for axis (extra safety) */
-["input","change","click","keydown"].forEach(evt => {
-  axisInput.addEventListener(evt, updateCoach);
+axisInput.addEventListener('input', () => {
+  axisInput.value = wrapAxis(axisInput.value || 0);
+  recomputeOver();
 });
 
-/* Initialization */
-(async function init(){
+axisInput.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value)||0) + AXIS_STEP); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); axisInput.value = wrapAxis((parseFloat(axisInput.value)||0) - AXIS_STEP); }
+  recomputeOver();
+});
+
+/* Change letter size */
+sizeBtn.addEventListener('click', async () => {
+  letterSize = (letterSize % 3) + 1;
   await applyLetterImages();
+  updateViews();
+});
 
-  // Start participant values
-  sphInput.value = "0.00"; 
-  cylInput.value = "0.00"; 
-  axisInput.value = "180";
+/* Show / Hide Answer */
+targetToggleBtn.addEventListener('click', () => {
+  const open = targetPanel.style.display !== 'none';
+  targetPanel.style.display = open ? 'none' : 'block';
+  targetToggleBtn.textContent = open ? 'Show Answer' : 'Hide Answer';
+});
 
-  // Clamp and show target
+/* Edit Answer (S, C, A) */
+[tSph, tCyl].forEach(el => el.addEventListener('input', () => {
+  TARGET.S = parseFloat(tSph.value) || 0;
+  TARGET.C = parseFloat(tCyl.value) || 0;
   TARGET = clampTarget(TARGET);
   tSph.value = TARGET.S.toFixed(2);
   tCyl.value = TARGET.C.toFixed(2);
-  tAxis.value = TARGET.A;
+  recomputeOver();
+}));
 
-  // Start in +cyl view for Smart Coach comparison (button shows the next action)
-  formToggleBtn.textContent = "To −cyl";
+tAxis.addEventListener('input', () => {
+  TARGET.A = wrapAxis(tAxis.value || 0);
+  tAxis.value = TARGET.A;
+  recomputeOver();
+});
+
+/* New Test */
+randBtn.addEventListener('click', () => {
+  STARTED = true;
+  COACH_STAGE = 1;
+  const randS = Math.round((Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN) * 4) / 4;
+  const randC = Math.round((Math.random() * (0 - T_CYL_MIN) + T_CYL_MIN) * 4) / 4;
+  const randA = Math.floor(Math.random() * 180) + 1;
+  TARGET = clampTarget({ S: randS, C: randC, A: randA });
+  tSph.value  = TARGET.S.toFixed(2);
+  tCyl.value  = TARGET.C.toFixed(2);
+  tAxis.value = TARGET.A;
+  recomputeOver();
+  updateCoach();
+});
+
+/* Convert Cyl (+↔−) */
+formToggleBtn.addEventListener('click', () => {
+  const S = parseFloat(sphInput.value) || 0;
+  const C = parseFloat(cylInput.value) || 0;
+  const A = wrapAxis(axisInput.value || 0);
+
+  sphInput.value  = (S + C).toFixed(2);
+  cylInput.value  = (-C).toFixed(2);
+  axisInput.value = (wrapAxis(A + 90)) || 180;
+
+  // track current view based on actual sign
+  IS_PLUS_CYL = ((parseFloat(cylInput.value) || 0) > 0);
 
   recomputeOver();
   updateCoach();
+});
+
+/* Reset participant (stay at DUOCHROME) */
+resetBtn.addEventListener('click', () => {
+  sphInput.value  = '0.00';
+  cylInput.value  = '0.00';
+  axisInput.value = '180';
+
+  IS_PLUS_CYL = false;
+  COACH_STAGE = 1;
+  STARTED     = true;
+
+  recomputeOver();
+  updateCoach();
+});
+
+</script>
+
+
+
+<script>
+/* ============ Coach (staged) ============ */
+function cycleCoachStage(){ COACH_STAGE = (COACH_STAGE % 3) + 1; updateCoach(); }
+
+let lastCylTip = 0; // tracks cyl at last tip (init in init())
+
+function updateCoach(){
+  const box = document.getElementById('coachBox');
+  if (!box) return;
+
+  if (!STARTED){
+    box.innerHTML = 'Are you ready? Press <b>"New Test"</b> to start.';
+    return;
+  }
+
+  const se     = TRUE.se;
+  const cylM   = Math.abs(TRUE.cyl);
+  const uAxis  = wrapAxis(axisInput.value || 180);
+
+  // SPH message
+  let sphMsg =
+    (se < -0.75)               ? 'Too blur — increase minus power.' :
+    (se > 0)                   ? 'Add plus until red side slightly clearer.' :
+    (se <= -0.25 && se >= -0.75) ? 'Excellent — red slightly clearer, proceed to axis adjustment.' :
+                                   'Add plus, blue cannot be clearer.';
+
+  // === AXIS coach: participant sets AXIS = TARGET.A + 90° (mod 180) ===
+  const ta = wrapAxis((TARGET.A || 180) + 90); // desired participant axis
+  const ua = uAxis;                             // participant axis
+  let diff = Math.abs(ua - ta); if (diff > 90) diff = 180 - diff;
+
+  let axisMsg =
+    (diff > 25) ? 'Still far — put AXIS to align with darker line.' :
+    (diff >= 6) ? 'Almost there — fine-tune closer to darkest fan line.' :
+                  'Excellent — proceed to check cyl power.';
+
+// --- CYL message (compare participant vs target cyl power only) ---
+const Tm_forCyl = normalizeMinus(TARGET.S, TARGET.C, TARGET.A); // target in −cyl
+const Pm_forCyl = getParticipantMinus();                         // participant in −cyl
+
+const targC = Math.abs(Tm_forCyl.C);
+const partC = Math.abs(Pm_forCyl.C);
+const shortBy = targC - partC;  // >0 means under-cyl, <0 means over-cyl
+
+let cylMsg;
+if (shortBy > 0 && shortBy <= 0.50) {
+  // specifically: under-cyl and within 0.50D short of correct
+  cylMsg = "Very close to even. It's getting harder to tell any difference.";
+} else if (shortBy < 0) {
+  // over-cyl
+  cylMsg = "Over-cyl — the opposite region is darker.";
+} else if (shortBy > 0) {
+  // under-cyl (more than 0.50D short)
+  cylMsg = "Under-cyl — increase plus cyl until darker areas even.<br><br>Always check if axis and darker line is same.<br>Always -0.50 sph when you add +1.00 cyl.";
+} else {
+  // exact match
+  cylMsg = "Excellent — proceed to balance duochrome.";
+}
+
+// (keep your +1.00 cyl → add −0.50 sph tip logic after this, unchanged)
+
+
+
+
+  // — Tip: every time participant CYL changes by ≥ 1.00D, append SPH help
+  const partCylNow = parseFloat(cylInput.value) || 0;
+  if (Math.abs(partCylNow - lastCylTip) >= 0.999) {
+    cylMsg += '';
+    lastCylTip = partCylNow;
+  }
+
+  // Active line
+let activeLine = '';
+if (COACH_STAGE === 1) activeLine = `
+  <div>
+    <b>First Step — Sharpen Duochrome</b><br>
+    Improve clarity until the <b>red is still slightly clearer</b> on the smaller letters.
+<br>Press 'Show Status' when you confirm your answer.
+    <br><br>
+    <div class="hint">Status: ${sphMsg}</div>
+  </div>`;
+
+if (COACH_STAGE === 2) activeLine = `
+  <div>
+    <b>Second Step — Axis Alignment</b><br>
+    Align the <b>axis with the darker area</b> to prepare for cyl power.
+<br>Press 'Show Status' when you confirm your answer.
+    <br><br>
+    <div class="hint">Status: ${axisMsg}</div>
+  </div>`;
+
+if (COACH_STAGE === 3) activeLine = `
+  <div>
+    <b>Third Step — Add Plus Cyl</b><br>
+    Increase <b>plus cyl</b> until the darker area looks even.
+<br>Press 'Show Status' when you confirm your answer.
+    <br><br>
+    <div class="hint">Status: ${cylMsg}</div>
+  </div>`;
+
+
+
+  box.innerHTML =
+    activeLine;
+
+
+
+  const btn = document.createElement('button');
+  btn.id = 'coachNextBtn';
+  btn.textContent = 'Next ▶';
+  btn.style.marginTop = '10px';
+  btn.style.fontSize = '12px';
+  btn.style.cursor = 'pointer';
+btn.onclick = () => {
+  // hide status (apply veil)
+  STATUS_REVEALED = false;
+  applyStatusVeil();
+  const statusBtn = document.getElementById('coachStatusBtn');
+  if (statusBtn) statusBtn.textContent = 'Show Status';
+
+  // then do what it already does
+  cycleCoachStage();
+};
+  box.appendChild(btn);
+
+  btn.style.display = box.textContent.includes('Excellent') ? 'inline-block' : 'none';
+  applyStatusVeil(); // NEW: keep veil state after render
+
+}
+
+/* ============ Init ============ */
+(async function init(){
+  await applyLetterImages();
+  sphInput.value  = '0.00';
+  cylInput.value  = '0.00';
+  axisInput.value = '180';
+
+  TARGET = clampTarget(TARGET);
+  tSph.value  = TARGET.S.toFixed(2);
+  tCyl.value  = TARGET.C.toFixed(2);
+  tAxis.value = TARGET.A;
+
+  IS_PLUS_CYL = false;
+  COACH_STAGE = 1;
+  STARTED     = false;
+
+  lastCylTip  = parseFloat(cylInput.value) || 0; // init CYL tip tracker
+
+  document.getElementById('coachBox').innerHTML = 'Are you ready? Press <b>"New Test"</b> to start.';
+  recomputeOver();
 })();
+</script>
+
+
+
+
+
+<style>
+/* fixed, large coach box */
+#coachBox{
+  min-height:120px;
+  overflow:hidden; /* prevents expansion */
+  display:flex; align-items:center; justify-content:center;
+  text-align:center;
+}
+
+/* veil (no HTML changes required) */
+.hint{ position:relative; }
+.hint::after{
+  content:"";
+  min-height:80px;
+
+  position:absolute; inset:0;
+  background:#fffdf0;   /* veil color */
+  opacity:1;       /* veil strength */
+  pointer-events:auto; /* block interaction */
+}
+.hint.revealed::after{
+  opacity:0;
+  pointer-events:none;
+}
+</style>
+
+
+
+
+<script>
+// external toggle state
+let STATUS_REVEALED = false;
+
+// toggle button outside the coach box (ID you control)
+const statusBtn = document.getElementById('coachStatusBtn');
+if (statusBtn){
+  const setLabel = () => statusBtn.textContent = STATUS_REVEALED ? 'Hide Status' : 'Show Status';
+  statusBtn.addEventListener('click', () => {
+    STATUS_REVEALED = !STATUS_REVEALED;
+    applyStatusVeil();
+    setLabel();
+  });
+  setLabel();
+}
+
+// apply veil class to current hints
+function applyStatusVeil(){
+  const hints = document.querySelectorAll('#coachBox .hint');
+  hints.forEach(h => h.classList.toggle('revealed', STATUS_REVEALED));
+}
 </script>
 
 
@@ -618,7 +674,10 @@ function updateCoach(){
 
 
 
-<div style="height:300px"></div>
 
+
+
+
+<div style="height:300px"></div>
 </body>
 </html>
