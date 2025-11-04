@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Refraction Trainer</title>
+<title>Fanchart & Duochrome Trainer</title>
 <style>
   body { font-family: system-ui, sans-serif; background:#fff; text-align:center; margin:20px; }
   #currentRx { font-weight:600; font-size:16px; margin-bottom:10px; }
@@ -32,7 +32,7 @@
 
   .rx-input { width:120px; font-size:12px; text-align:center; padding:6px; border-radius:6px; border:1px solid #ccc; margin-bottom:5px; }
   .btn-plus, .btn-minus { font-size:14px; border:1px solid #000; padding:6px 10px; border-radius:6px; cursor:pointer; color:#fff; transition:opacity .2s; margin:2px; }
-  .btn-plus { background:#2e8b57; } .btn-minus{ background:#d9534f; }
+  .btn-plus { background:#212121; } .btn-minus{ background:#d9534f; }
   .btn-plus:hover, .btn-minus:hover { opacity:.85; }
   .btn-group button { font-size:12px; padding:5px 5px; margin:5px; border:1px solid #000; border-radius:10px; cursor:pointer; background:#dcdcdc; color:#000; min-width:160px; }
   .btn-group button:hover { background:#c8c8c8; }
@@ -46,10 +46,36 @@
 <div style="height:10px;"></div>
 <div id="currentRx">FANCHART & DUOCHROME TRAINER</div>
 
+
+
+
 <!-- Controls -->
 <div id="controls" class="card" style="font-size:15px; width:550px">
-  Your challenge is to find the RX that makes everything clear again!<br><br>
+  Your challenge is to find the RX that makes everything clear again!
+<div class="row btn-group">
+<div style="height:10px;"></div>
+
+
+    <button style="background:#fff; border:1px solid grey; width:500px;" id="formToggleBtn">Convert Cyl</button>
+
+  <button style="background:#fff; border:1px solid grey; width:500px;" id="targetToggleBtn">Show Answer</button></div>  
+
+
+<!-- Answer -->
+<div id="targetPanel" style="border:none; display:none; justify-content:center; width:550px;">
+
+  SPH <input type="number" id="tSph" step="0.25" value="-1.00">
+  CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
+  AXIS <input type="number" id="tAxis" step="5"   value="180">
+<div style="height:10px"></div>
+
+</div>
+<div style="height:10px;"></div>
+
+
+
   <div style="display:flex; justify-content:center; gap:50px; flex-wrap:wrap; align-items:flex-start;">
+
     <!-- SPH -->
     <div style="text-align:center;">
       <label><b>SPH</b></label><br>
@@ -77,7 +103,7 @@
     <!-- AXIS -->
     <div style="text-align:center;">
       <label><b>AXIS</b></label><br>
-      <input type="number" id="axis" step="5" value="180" class="rx-input"><br>
+      <input type="number" id="axis" step="1" value="180" class="rx-input"><br>
       <div>
         <button onclick="adj('axis', -5)"  class="btn-minus">−5</button>
         <button onclick="adj('axis',  5)"  class="btn-plus">+5</button><br>
@@ -89,38 +115,26 @@
 
   <div style="height:10px"></div>
   <div class="row btn-group">
-    <button id="resetBtn">Reset Rx to 0</button>
-    <button id="sizeBtn">Change Letter Size</button>
-    <button id="formToggleBtn">Convert Cyl</button>
+    <button style="width:240px" id="resetBtn">Reset Rx to 0</button>
+    <button style="width:240px" id="sizeBtn">Change Letter Size</button>
   </div>
 </div>
 
-<div style="height:10px"></div>
-<div class="row btn-group">
-  <button style="background:#fffdf0; width:150px;" id="randBtn">New Test</button>
-  <button style="background:#fffdf0; width:150px;" id="targetToggleBtn">Show Answer</button></div>
 
-
-<!-- Answer -->
-<div id="targetPanel" style="border:none; display:none; width:550px; margin:10px auto;">
-  <span><b>ANSWER:</b>&nbsp;&nbsp;&nbsp;</span>
-  SPH <input type="number" id="tSph" step="0.25" value="-1.00">
-  CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
-  AXIS <input type="number" id="tAxis" step="5"   value="180">
+<div class="row btn-group" style="
+  display:flex;
+  flex-direction:row;   /* side by side */
+  justify-content:center;
+  align-items:center;
+  gap:10px;             /* space between buttons */
+">
+  <button style="background:#fffdf0; border:1px solid grey; width:275px;" id="randBtn">New Test</button>
+  <button style="background:#fffdf0; border:1px solid grey; width:275px;" id="coachStatusBtn">Show Status</button>
 </div>
-
-
-
-
-
-
-
 
 <!-- Smart Coach -->
-<div id="coachBox" class="card" style="background:#fffdf0; display:inline-block; text-align:left; font-size:12px; width:550px;">
-</div>
-<div class="row btn-group">
-  <button style="background:#fffdf0; width:150px;" id="coachStatusBtn">Show Status</button>
+<div id="coachBox" class="card" style="background:#fffdf0; display:inline-block; text-align:left; font-size:12px; width:550px; padding:20px"></div>
+
 
 </div>
 
@@ -172,6 +186,16 @@
   </div>
 </div>
 
+
+
+
+
+
+
+
+
+
+
 <script>
 /* =========================
    Quick adjust buttons
@@ -190,6 +214,14 @@ function adj(type, step){
   el.dispatchEvent(new Event('input'));
 }
 </script>
+
+
+
+
+
+
+
+
 
 <script>
 /* ===== Tunables & State ===== */
@@ -458,11 +490,30 @@ resetBtn.addEventListener('click', () => {
 
 
 
-<script>
-/* ============ Coach (staged) ============ */
-function cycleCoachStage(){ COACH_STAGE = (COACH_STAGE % 3) + 1; updateCoach(); }
 
-let lastCylTip = 0; // tracks cyl at last tip (init in init())
+
+
+
+
+<script>
+// ======= Stages: 1..9 with custom next hops =======
+function cycleCoachStage(){
+  if (COACH_STAGE === 8) {
+    // after re-do refine duochrome, jump back to fan check
+    COACH_STAGE = 5;
+  } else if (COACH_STAGE === 9) {
+    // final SPH check returns to fan check loop
+    COACH_STAGE = 5;
+  } else {
+    COACH_STAGE = COACH_STAGE + 1; // normal increment
+  }
+  updateCoach();
+}
+
+function isFanChartUneven(diffAxisDeg, cylShortByAbs){
+  // tweak thresholds any time
+  return (diffAxisDeg >= 6) || (cylShortByAbs >= 0.25);
+}
 
 function updateCoach(){
   const box = document.getElementById('coachBox');
@@ -473,121 +524,222 @@ function updateCoach(){
     return;
   }
 
-  const se     = TRUE.se;
-  const cylM   = Math.abs(TRUE.cyl);
-  const uAxis  = wrapAxis(axisInput.value || 180);
+  const se    = TRUE.se;
+  const uAxis = wrapAxis(axisInput.value || 180);
 
-  // SPH message
+  // ===== SPH status (1/4/8) =====
   let sphMsg =
-    (se < -0.75)               ? 'Too blur — increase minus power.' :
-    (se > 0)                   ? 'Add plus until red side slightly clearer.' :
-    (se <= -0.25 && se >= -0.75) ? 'Excellent — red slightly clearer, proceed to axis adjustment.' :
-                                   'Add plus, blue cannot be clearer.';
+    (se < -0.75)                 ? 'Too blur — increase minus power.' :
+    (se > 0)                     ? 'Blue cannot be clearer — Add plus until red side slightly clearer.' :
+    (se <= -0.25 && se >= -0.75) ? 'Excellent — red slightly clearer, ready for Fan Chart balancing.' :
+                                   'Blue cannot be clearer — Add plus until red side slightly clearer.';
 
-  // === AXIS coach: participant sets AXIS = TARGET.A + 90° (mod 180) ===
-  const ta = wrapAxis((TARGET.A || 180) + 90); // desired participant axis
-  const ua = uAxis;                             // participant axis
-  let diff = Math.abs(ua - ta); if (diff > 90) diff = 180 - diff;
+  // ===== AXIS math (shared numbers for stages 2 & 6) =====
+  const ta = wrapAxis((TARGET.A || 180) + 90);
+  let diff = Math.abs(uAxis - ta); if (diff > 90) diff = 180 - diff;
 
-  let axisMsg =
+  // Stage 2 copy (initial balancing)
+  const axisMsg2 =
     (diff > 25) ? 'Still far — put AXIS to align with darker line.' :
-    (diff >= 6) ? 'Almost there — fine-tune closer to darkest fan line.' :
+    (diff >= 6) ? 'Almost there — fine-tune with small steps (5 or 1 degree) towards darker fan line.' :
                   'Excellent — proceed to check cyl power.';
 
-// --- CYL message (compare participant vs target cyl power only) ---
-const Tm_forCyl = normalizeMinus(TARGET.S, TARGET.C, TARGET.A); // target in −cyl
-const Pm_forCyl = getParticipantMinus();                         // participant in −cyl
+  // Stage 6 copy (re-check cycle: fresh wording)
+  const axisMsg6 =
+    (diff > 25) ? 'Not there yet — rotate axis (in 5° steps) towards the darker fan line.' :
+    (diff >= 6) ? 'Nearly there — rotate axis (in 1° steps) towards the darker fan line.' :
+                  'Excellent — proceed to check cyl power.';
 
-const targC = Math.abs(Tm_forCyl.C);
-const partC = Math.abs(Pm_forCyl.C);
-const shortBy = targC - partC;  // >0 means under-cyl, <0 means over-cyl
+  // ===== CYL status (3/7) =====
+  const Tm_forCyl = normalizeMinus(TARGET.S, TARGET.C, TARGET.A);
+  const Pm_forCyl = getParticipantMinus();
+  const targC = Math.abs(Tm_forCyl.C);
+  const partC = Math.abs(Pm_forCyl.C);
+  const shortBy = targC - partC;
 
-let cylMsg;
-if (shortBy > 0 && shortBy <= 0.50) {
-  // specifically: under-cyl and within 0.50D short of correct
-  cylMsg = "Very close to even. It's getting harder to tell any difference.";
-} else if (shortBy < 0) {
-  // over-cyl
-  cylMsg = "Over-cyl — the opposite region is darker.";
-} else if (shortBy > 0) {
-  // under-cyl (more than 0.50D short)
-  cylMsg = "Under-cyl — increase plus cyl until darker areas even.<br><br>Always check if axis and darker line is same.<br>Always -0.50 sph when you add +1.00 cyl.";
-} else {
-  // exact match
-  cylMsg = "Excellent — proceed to balance duochrome.";
-}
+  let cylMsg;
+  if (shortBy > 0 && shortBy <= 0.50) {
+    cylMsg = "Very close to even. If difficult to tell any difference, improve clarity.<br><b>Hint:</b> Improve clarity by adding minus SPH but <b>ensure red still clearer.</b>";
+  } else if (shortBy < 0) {
+    cylMsg = "Over-cyl — added too much cyl and opposite side darker. Reduce plus cyl.";
+  } else if (shortBy > 0) {
+    cylMsg = "Under-cyl — increase plus cyl until areas even. If difficult to tell any difference, improve clarity.<br><b>Hint:</b> Improve clarity by adding minus SPH but <b>ensure red still clearer.</b>";
+  } else {
+    cylMsg = "Excellent — proceed to refine duochrome.";
+  }
 
-// (keep your +1.00 cyl → add −0.50 sph tip logic after this, unchanged)
-
-
-
-
-  // — Tip: every time participant CYL changes by ≥ 1.00D, append SPH help
+  // tip tracker
   const partCylNow = parseFloat(cylInput.value) || 0;
   if (Math.abs(partCylNow - lastCylTip) >= 0.999) {
-    cylMsg += '';
     lastCylTip = partCylNow;
   }
 
-  // Active line
-let activeLine = '';
-if (COACH_STAGE === 1) activeLine = `
-  <div>
-    <b>First Step — Sharpen Duochrome</b><br>
-    Improve clarity until the <b>red is still slightly clearer</b> on the smaller letters.
-<br>Press 'Show Status' when you confirm your answer.
-    <br><br>
-    <div class="hint">Status: ${sphMsg}</div>
-  </div>`;
+  // ===== Fan-chart check text (Stage 5) =====
+  const fanUneven = isFanChartUneven(diff, Math.abs(shortBy));
+  const fanMsgYes = "Doesn't look even — proceed to re-axis alignment.";
+  const fanMsgNo  = "Looks even. Proceed to final step.";
 
-if (COACH_STAGE === 2) activeLine = `
-  <div>
-    <b>Second Step — Axis Alignment</b><br>
-    Align the <b>axis with the darker area</b> to prepare for cyl power.
-<br>Press 'Show Status' when you confirm your answer.
-    <br><br>
-    <div class="hint">Status: ${axisMsg}</div>
-  </div>`;
+  // ===== Render staged lines =====
+  let activeLine = '';
 
-if (COACH_STAGE === 3) activeLine = `
-  <div>
-    <b>Third Step — Add Plus Cyl</b><br>
-    Increase <b>plus cyl</b> until the darker area looks even.
-<br>Press 'Show Status' when you confirm your answer.
-    <br><br>
-    <div class="hint">Status: ${cylMsg}</div>
-  </div>`;
+  if (COACH_STAGE === 1) activeLine = `
+    <div>
+      <b>First Step — Sharpen Duochrome</b><br>
+      Improve clarity but <b>keep red slightly clearer</b> on the smaller letters.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${sphMsg}</div>
+    </div>`;
 
+  if (COACH_STAGE === 2) activeLine = `
+    <div>
+      <b>Second Step — Fan Chart Balancing</b><br>
+      Identify <b>the center axis of the darker area</b>.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${axisMsg2}</div>
+    </div>`;
 
+  if (COACH_STAGE === 3) activeLine = `
+    <div>
+      <b>Third Step — Add Plus Cyl</b><br>
+      <b>Plus cyl softens darker area</b>; everything must look even.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${cylMsg}</div>
+    </div>`;
 
-  box.innerHTML =
-    activeLine;
+  if (COACH_STAGE === 4) activeLine = `
+    <div>
+      <b>Fourth Step — Refine Duochrome</b><br>
+      Improve clarity <b>again</b> but <b>keep red slightly clearer</b> on the smaller letters.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${sphMsg}</div>
+    </div>`;
 
+  if (COACH_STAGE === 5) activeLine = `
+    <div>
+      <b>Fifth Step — Fan Chart Balancing Again: Is Fan Chart even?</b><br>
+      If no, repeat Fan Chart Balancing test. If yes, proceed to Sharpening test.
+      <div id="fanActions"
+           style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+        <button id="coachNoBtn"  style="font-size:10px; padding:4px 8px; cursor:pointer;">No</button>
+        <button id="coachYesBtn" style="font-size:10px; padding:4px 8px; cursor:pointer;">Yes</button>
+      </div>
+      <div id="fanHint" class="hint" style="margin-top:10px;">
+        Status: ${fanUneven ? fanMsgYes : fanMsgNo}
+      </div>
+    </div>`;
 
+  if (COACH_STAGE === 6) activeLine = `
+    <div>
+      <b>Re-do Fan Chart Balancing</b><br>
+      Re-align to <b>the center axis of darker area in small steps (5° or 1°)</b>.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${axisMsg6}</div>
+    </div>`;
 
-  const btn = document.createElement('button');
-  btn.id = 'coachNextBtn';
-  btn.textContent = 'Next ▶';
-  btn.style.marginTop = '10px';
-  btn.style.fontSize = '12px';
-  btn.style.cursor = 'pointer';
-btn.onclick = () => {
-  // hide status (apply veil)
-  STATUS_REVEALED = false;
-  applyStatusVeil();
-  const statusBtn = document.getElementById('coachStatusBtn');
-  if (statusBtn) statusBtn.textContent = 'Show Status';
+  if (COACH_STAGE === 7) activeLine = `
+    <div>
+      <b>Re-do Add Plus Cyl</b><br>
+      Increase <b>plus cyl in small steps</b> until chart looks even.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${cylMsg}</div>
+    </div>`;
 
-  // then do what it already does
-  cycleCoachStage();
-};
-  box.appendChild(btn);
+  if (COACH_STAGE === 8) activeLine = `
+    <div>
+      <b>Re-do Refine Duochrome</b><br>
+      Improve clarity <b>again</b> but <b>keep red slightly clearer</b> on the smaller letters.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${sphMsg}</div>
+    </div>`;
 
-  btn.style.display = box.textContent.includes('Excellent') ? 'inline-block' : 'none';
-  applyStatusVeil(); // NEW: keep veil state after render
+  // ===== Stage 9 — SE=0 (no red/blue bias) =====
+  const SE_TOL = 0.12; // accept ±0.12 D as "Excellent"
+  let sph9Msg;
 
+  if (Math.abs(se) <= SE_TOL) {
+    sph9Msg = "Excellent — Red & Blue equally clear. <br><b>Convert Cyl then Check your answer above!</b>";
+  } else if (se > SE_TOL) {
+    // Too plus-biased → blue/green tends to look clearer
+    sph9Msg = "Blue side is clearer — add a little <b>minus</b></span> until balance.";
+  } else { // se < -SE_TOL
+    // Too minus-biased → red tends to look clearer
+    sph9Msg = "Red side is clearer — add a little <b>plus</b></span> until balance.";
+  }
+
+  if (COACH_STAGE === 9) activeLine = `
+    <div>
+      <b>Final Step — Sharpen vision on Small Letters</b><br>
+      Add minus SPH until <b>small letters in both red and blue are equally clear.</b> If over shoot, reduce the SPH.
+      <br><br>Press 'Show Status' to check your answer.
+      <br><br><div class="hint">Status: ${sph9Msg}</div>
+    </div>`;
+
+  // ---- render
+  box.innerHTML = activeLine;
+
+  // ===== Stage 5 buttons (Yes/No) =====
+  if (COACH_STAGE === 5){
+    const yesBtn  = document.getElementById('coachYesBtn');
+    const noBtn   = document.getElementById('coachNoBtn');
+
+    // YES = Fan chart even → go directly to Stage 9
+    if (yesBtn) yesBtn.onclick = () => {
+      STATUS_REVEALED = false;
+      applyStatusVeil();
+      const statusBtn = document.getElementById('coachStatusBtn');
+      if (statusBtn) statusBtn.textContent = 'Show Status';
+      COACH_STAGE = 9;
+      updateCoach();
+    };
+
+    // NO = Uneven → Stage 6 (re-axis) → 7 → 8 → back to 5
+    if (noBtn) noBtn.onclick = () => {
+      STATUS_REVEALED = false;
+      applyStatusVeil();
+      const statusBtn = document.getElementById('coachStatusBtn');
+      if (statusBtn) statusBtn.textContent = 'Show Status';
+      COACH_STAGE = 6;
+      updateCoach();
+    };
+  }
+
+  // ===== “Next” button for all stages EXCEPT stage 5 =====
+if (COACH_STAGE !== 5 && COACH_STAGE !== 9){
+    const btn = document.createElement('button');
+    btn.id = 'coachNextBtn';
+    btn.textContent = 'Next ▶';
+    btn.style.marginTop = '5px';
+    btn.style.fontSize = '10px';
+    btn.style.cursor = 'pointer';
+    btn.onclick = () => {
+      STATUS_REVEALED = false;
+      applyStatusVeil();
+      const statusBtn = document.getElementById('coachStatusBtn');
+      if (statusBtn) statusBtn.textContent = 'Show Status';
+      cycleCoachStage();
+    };
+    box.appendChild(btn);
+
+    // show Next only when the HINT says “Excellent”
+    const hint = box.querySelector('.hint');
+    const hasExcellent = hint ? hint.textContent.includes('Excellent') : false;
+    btn.style.display = hasExcellent ? 'inline-block' : 'none';
+  }
+
+  applyStatusVeil(); // keep veil state
 }
+</script>
 
+
+
+
+
+
+
+
+
+
+<script>
 /* ============ Init ============ */
 (async function init(){
   await applyLetterImages();
@@ -618,7 +770,8 @@ btn.onclick = () => {
 <style>
 /* fixed, large coach box */
 #coachBox{
-  min-height:120px;
+  min-height:140px;
+max-width:530px;
   overflow:hidden; /* prevents expansion */
   display:flex; align-items:center; justify-content:center;
   text-align:center;
@@ -628,7 +781,7 @@ btn.onclick = () => {
 .hint{ position:relative; }
 .hint::after{
   content:"";
-  min-height:80px;
+  min-height:110px;
 
   position:absolute; inset:0;
   background:#fffdf0;   /* veil color */
