@@ -52,21 +52,17 @@
 <!-- Controls -->
 <div id="controls" class="card" style="font-size:15px; width:550px">
   Your challenge is to find the RX that makes everything clear again!
-<div class="row btn-group">
-<div style="height:10px;"></div>
 
 
-    <button style="background:#fff; border:1px solid grey; width:500px;" id="formToggleBtn">Convert Cyl</button>
-
-  <button style="background:#fff; border:1px solid grey; width:500px;" id="targetToggleBtn">Show Answer</button></div>  
+<div style="height:20px"></div>
 
 
 <!-- Answer -->
 <div id="targetPanel" style="border:none; display:none; justify-content:center; width:550px;">
 
-  SPH <input type="number" id="tSph" step="0.25" value="-1.00">
-  CYL <input type="number" id="tCyl" step="0.25" value="-1.00">
-  AXIS <input type="number" id="tAxis" step="5"   value="180">
+  <b>SPH</b> <input style="width:100px" type="number" id="tSph" step="0.25" value="-1.00">
+  <b>CYL</b> <input style="width:100px" type="number" id="tCyl" step="0.25" value="-1.00">
+  <b>AXIS</b> <input style="width:100px" type="number" id="tAxis" step="5"   value="180">
 <div style="height:10px"></div>
 
 </div>
@@ -117,8 +113,16 @@
   <div class="row btn-group">
     <button style="width:240px" id="resetBtn">Reset Rx to 0</button>
     <button style="width:240px" id="sizeBtn">Change Letter Size</button>
+<div class="row btn-group">
+
+
+    <button style="background:pink; border:1px solid black; width:240px;" id="formToggleBtn">Convert Cyl</button>
+
+  <button style="background:pink; border:1px solid black; width:240px;" id="targetToggleBtn">Show Answer</button></div> 
   </div>
 </div>
+
+
 
 
 <div class="row btn-group" style="
@@ -134,6 +138,9 @@
 
 <!-- Smart Coach -->
 <div id="coachBox" class="card" style="background:#fffdf0; display:inline-block; text-align:left; font-size:12px; width:550px; padding:20px"></div>
+
+ 
+
 
 
 </div>
