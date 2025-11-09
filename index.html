@@ -241,6 +241,25 @@ const PX_PER_D = 2, K_BLUR_PER_D = 2.0, EXTRA_ASTIG_BLUR_PER_D = 0.40, OVERLAY_A
 const T_SPH_MIN = -7.00, T_SPH_MAX = +4.00, T_CYL_MIN = -4.00, T_CYL_MAX = 0.00;
 const FC_BLUR_GAIN = 0.50;
 
+// ===== Adjustable ranges for New Test =====
+const NEWTEST = {
+  sphMin: -7.00,  // quarter-step range
+  sphMax:  4.00,
+  cylMin: -4.00,  // ≤ 0 (minus cyl)
+  cylMax:  0.00,
+  axisStep: 1     // 1..180 (e.g., 5 → 1,6,11,...,176)
+};
+
+// Optional helper to tweak from console/code:
+// setNewTest({ sphMin:-3, sphMax:+2, cylMin:-2, cylMax:0, axisStep:5 })
+function setNewTest(opts = {}) { Object.assign(NEWTEST, opts); }
+
+// quarter-step picker
+function pick025(min, max){
+  const steps = Math.max(0, Math.round((max - min) * 4));
+  return (min * 4 + Math.floor(Math.random() * (steps + 1))) / 4;
+}
+
 const redImg = document.getElementById('redImg');
 const blueImg = document.getElementById('blueImg');
 const redOv  = document.getElementById('redOv');
@@ -452,17 +471,32 @@ tAxis.addEventListener('input', () => {
   recomputeOver();
 });
 
-/* New Test */
+/* New Test (now adjustable) */
 randBtn.addEventListener('click', () => {
   STARTED = true;
   COACH_STAGE = 1;
-  const randS = Math.round((Math.random() * (T_SPH_MAX - T_SPH_MIN) + T_SPH_MIN) * 4) / 4;
-  const randC = Math.round((Math.random() * (0 - T_CYL_MIN) + T_CYL_MIN) * 4) / 4;
-  const randA = Math.floor(Math.random() * 180) + 1;
-  TARGET = clampTarget({ S: randS, C: randC, A: randA });
+
+  // sanitize NEWTEST ranges
+  const sMin  = Math.min(NEWTEST.sphMin, NEWTEST.sphMax);
+  const sMax  = Math.max(NEWTEST.sphMin, NEWTEST.sphMax);
+  const cMin  = Math.min(NEWTEST.cylMin, 0);
+  const cMax  = Math.min(Math.max(NEWTEST.cylMax, cMin), 0);
+  const aStep = Math.max(1, Math.min(180, Math.round(NEWTEST.axisStep || 1)));
+
+  // pick SPH/CYL in 0.25D steps
+  const S = pick025(sMin, sMax);
+  const C = pick025(cMin, cMax);
+
+  // pick AXIS with custom step
+  const totalSteps = Math.floor(180 / aStep);
+  const k = Math.floor(Math.random() * totalSteps);
+  const A = wrapAxis((k * aStep) || 180);
+
+  TARGET = clampTarget({ S, C, A });
   tSph.value  = TARGET.S.toFixed(2);
   tCyl.value  = TARGET.C.toFixed(2);
   tAxis.value = TARGET.A;
+
   recomputeOver();
   updateCoach();
 });
