@@ -385,13 +385,28 @@ function updateViews(){
   redImg.style.filter  = `blur(${quant05(blurRed)}px)`;
   blueImg.style.filter = `blur(${quant05(blurBlue)}px)`;
 
-  const mag = Math.abs(cyl) * PX_PER_D *4;
+  const mag = Math.abs(cyl) * PX_PER_D *1;
   let ang = (axis % 180) * 2; ang -= 90;
   const rad = ang * Math.PI / 180;
   const shiftX = Math.round(Math.cos(rad) * mag);
   const shiftY = Math.round(Math.sin(rad) * mag);
   redOv.style.transform  = `translate(${shiftX}px, ${shiftY}px)`;
   blueOv.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+
+
+// --- Opposite shift for the main Duochrome (base) images ---
+const EPS = 0.01; // tiny threshold to avoid jitter
+if (Math.abs(cyl) > EPS) {
+  const baseX = -shiftX;
+  const baseY = -shiftY;
+  redImg.style.transform  = `translate(${baseX}px, ${baseY}px)`;
+  blueImg.style.transform = `translate(${baseX}px, ${baseY}px)`;
+} else {
+  // reset when cyl is effectively correct
+  redImg.style.transform  = 'translate(0px, 0px)';
+  blueImg.style.transform = 'translate(0px, 0px)';
+}
+
 
   const extra = Math.abs(cyl) * EXTRA_ASTIG_BLUR_PER_D;
   redOv.style.filter  = `blur(${quant05(blurRed  + extra)}px)`;
