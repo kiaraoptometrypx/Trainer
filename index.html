@@ -237,7 +237,7 @@ function adj(type, step){
 
 <script>
 /* ===== Tunables & State ===== */
-const PX_PER_D = 2, K_BLUR_PER_D = 2.0, EXTRA_ASTIG_BLUR_PER_D = 0.40, OVERLAY_ALPHA = 0.60, AXIS_STEP = 5;
+const PX_PER_D = 8, K_BLUR_PER_D = 4, EXTRA_ASTIG_BLUR_PER_D = 0, OVERLAY_ALPHA = 0.5, AXIS_STEP = 1;
 const T_SPH_MIN = -7.00, T_SPH_MAX = +4.00, T_CYL_MIN = -4.00, T_CYL_MAX = 0.00;
 const FC_BLUR_GAIN = 0.50;
 
@@ -385,7 +385,7 @@ function updateViews(){
   redImg.style.filter  = `blur(${quant05(blurRed)}px)`;
   blueImg.style.filter = `blur(${quant05(blurBlue)}px)`;
 
-  const mag = Math.abs(cyl) * PX_PER_D;
+  const mag = Math.abs(cyl) * PX_PER_D *2;
   let ang = (axis % 180) * 2; ang -= 90;
   const rad = ang * Math.PI / 180;
   const shiftX = Math.round(Math.cos(rad) * mag);
